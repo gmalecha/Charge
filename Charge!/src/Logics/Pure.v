@@ -1,8 +1,6 @@
-Add Rec LoadPath "/Users/jebe/git/Charge/Charge!/bin".
-Add Rec LoadPath "/Users/jebe/git/mirror-core/src/" as MirrorCore.
-
-Require Import ILogic ILInsts BILogic ILEmbed ILQuantTac.
 Require Import Setoid Morphisms.
+Require Import Logics.ILogic.
+Require Import Logics.BILogic.
 
 Set Implicit Arguments.
 Unset Strict Implicit.
@@ -16,7 +14,7 @@ Section Pure.
     pure : A -> Prop
   }.
 
-  Definition parameter_pure (pure : A -> Prop) (P : A) : Prop :=
+  Definition axioms_pure (pure : A -> Prop) (P : A) : Prop :=
     (forall Q, P //\\ Q |-- P ** Q) /\
     (forall Q, pure Q -> P ** Q |-- P //\\ Q) /\
     (forall Q R, (P //\\ Q) ** R -|- P //\\ (Q ** R)) /\
@@ -25,7 +23,7 @@ Section Pure.
 
 
   Class Pure {HP : PureOp} :=
-  { pure_axiom : forall p, pure p -> parameter_pure pure p
+  { pure_axiom : forall p, pure p -> axioms_pure pure p
   ; pure_proper : Proper (lequiv ==> iff) pure
   }.
 

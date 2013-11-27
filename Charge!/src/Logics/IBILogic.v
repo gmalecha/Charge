@@ -1,8 +1,5 @@
-Add Rec LoadPath "/Users/jebe/git/Charge/Charge!/bin".
-
-Require Import RelationClasses Setoid Morphisms.
-Require Import ILogic ILInsts BILInsts ILQuantTac BILogic SepAlg.
-Require Import Pure.
+Require Import Logics.ILogic.
+Require Import Logics.BILogic.
 
 Set Implicit Arguments.
 Unset Strict Implicit.
@@ -40,6 +37,7 @@ Section IBILogicProperties.
 
 End IBILogicProperties.
 
+(*
 Section IBISepAlg.
   Context {A} `{sa : SepAlg A}.
   Context {B} `{IL: ILogic B}.
@@ -204,3 +202,4 @@ Section IBILogic_Fun.
   Qed.
 
 End IBILogic_Fun.
+*)

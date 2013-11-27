@@ -1,5 +1,5 @@
-Require Import Setoid Morphisms RelationClasses Program.Basics Omega.
-Require Import Rel OrderedType.
+Require Import Setoid Morphisms RelationClasses.
+Require Import OrderedType.
 
 Set Implicit Arguments.
 Unset Strict Implicit.
@@ -11,20 +11,18 @@ Section SepAlgSect.
     sa_mul : T -> T -> T -> Prop
   }.
 
-  Class SepAlg T `{e : Rel T} `{SAOps: SepAlgOps T} : Type := {
-    sa_type            :> Equivalence rel;
-    sa_mulC a b c      : sa_mul a b c -> sa_mul b a c;
-    sa_mulA a b c      : forall ab abc, sa_mul a b ab -> sa_mul ab c abc ->
-                                        exists bc, sa_mul b c bc /\ sa_mul a bc abc;
-    sa_unit_ex a       : exists e, sa_unit e /\ sa_mul a e a;
-    sa_unit_eq a a' e  : sa_unit e -> sa_mul a e a' -> a' === a;
-    sa_unit_proper     : Proper (equiv ==> iff) sa_unit;
-    sa_mul_mon a b c d : a === b -> sa_mul a c d -> sa_mul b c d 
+  Class SepAlg T `{equiv : relation T} `{SAOps: SepAlgOps T} : Type :=
+  { sa_type            :> Equivalence equiv
+  ; sa_mulC a b c      : sa_mul a b c -> sa_mul b a c
+  ; sa_mulA a b c      : forall ab abc, sa_mul a b ab -> sa_mul ab c abc ->
+                                        exists bc, sa_mul b c bc /\ sa_mul a bc abc
+  ; sa_unit_ex a       : exists e, sa_unit e /\ sa_mul a e a
+  ; sa_unit_eq a a' e  : sa_unit e -> sa_mul a e a' -> a' === a
+  ; sa_unit_proper     : Proper (equiv ==> iff) sa_unit
+  ; sa_mul_mon a b c d : a === b -> sa_mul a c d -> sa_mul b c d
   }.
 
 End SepAlgSect.
- 
-Implicit Arguments SepAlg [[e] [SAOps]].
 
 Section SepAlgCompat.
   Context A `{SA: SepAlg A}.
@@ -34,41 +32,41 @@ Section SepAlgCompat.
 
   Lemma sa_mul_monR (a b c d : A) (Habc : sa_mul a b c) (Hcd: c === d) : sa_mul a b d.
   Proof.
-  	pose proof (sa_unit_ex d) as [u [H1 H2]].
-  	apply symmetry in Hcd.
-  	apply (sa_mul_mon Hcd) in H2.
-  	pose proof @sa_mulA as H3.
-  	specialize (H3 _ _ _ _ _ _ _ _ _ Habc H2).
-  	destruct H3 as [ac [H3 H4]].
-  	apply (sa_unit_eq H1) in H3.
-  	apply sa_mulC. eapply sa_mul_mon; [| eapply sa_mulC]; eassumption.
+    pose proof (sa_unit_ex d) as [u [H1 H2]].
+    apply symmetry in Hcd.
+    apply (sa_mul_mon Hcd) in H2.
+    pose proof @sa_mulA as H3.
+    specialize (H3 _ _ _ _ _ _ _ _ _ Habc H2).
+    destruct H3 as [ac [H3 H4]].
+    apply (sa_unit_eq H1) in H3.
+    apply sa_mulC. eapply sa_mul_mon; [| eapply sa_mulC]; eassumption.
   Qed.
-  
+
   Lemma sa_mulC2 a b c : sa_mul a b c <-> sa_mul b a c.
   Proof.
     split; apply sa_mulC.
   Qed.
 
-
-  Global Instance sa_mul_proper : Proper (rel ==> rel ==> rel ==> iff) sa_mul.
+  Global Instance sa_mul_proper
+  : Proper (equiv ==> equiv ==> equiv ==> iff) (@sa_mul _ SAOps).
   Proof.
-  	intros a b Hab c d Hcd f g Hfg; split; intros H.
-  	+ eapply sa_mul_mon; [eassumption|].
-  	  eapply sa_mulC; eapply sa_mul_mon; [eassumption|]; eapply sa_mulC.
-  	  eapply sa_mul_monR; eassumption.
-  	+ eapply sa_mul_mon; [symmetry; eassumption|].
-  	  eapply sa_mulC; eapply sa_mul_mon; [symmetry; eassumption|]; eapply sa_mulC.
-  	  eapply sa_mul_monR; [|symmetry]; eassumption.
+    intros a b Hab c d Hcd f g Hfg; split; intros H.
+    + eapply sa_mul_mon; [eassumption|].
+      eapply sa_mulC; eapply sa_mul_mon; [eassumption|]; eapply sa_mulC.
+      eapply sa_mul_monR; eassumption.
+    + eapply sa_mul_mon; [symmetry; eassumption|].
+      eapply sa_mulC; eapply sa_mul_mon; [symmetry; eassumption|]; eapply sa_mulC.
+      eapply sa_mul_monR; [|symmetry]; eassumption.
   Qed.
 
 End SepAlgCompat.
 
 Module SepAlgNotations.
-Notation "a '-' b" := (sa_mul a b) (at level 50, left associativity) : sa_scope.
-Notation "a '-' b |-> c" := (sa_mul a b c) (at level 52, no associativity) : sa_scope.
-Notation "^" := sa_unit : sa_scope.
-Notation "a # b" := (compat a b) (at level 70, no associativity) : sa_scope.
-Notation "a <= b" := (subheap a b) (at level 70, no associativity) : sa_scope.
+  Notation "a '-' b" := (sa_mul a b) (at level 50, left associativity) : sa_scope.
+  Notation "a '-' b |-> c" := (sa_mul a b c) (at level 52, no associativity) : sa_scope.
+  Notation "^" := sa_unit : sa_scope.
+  Notation "a # b" := (compat a b) (at level 70, no associativity) : sa_scope.
+  Notation "a <= b" := (subheap a b) (at level 70, no associativity) : sa_scope.
 End SepAlgNotations.
 
 Import SepAlgNotations.
@@ -114,7 +112,7 @@ Proof.
 Qed.
 
 Section Properties.
-  Context A `{sa : SepAlg A}.
+  Context A equiv SAOps `{sa : @SepAlg A equiv SAOps}.
   Open Scope sa_scope.
    
   Global Instance sa_subheap_equiv_proper :
@@ -125,7 +123,7 @@ Section Properties.
   Qed.
   
   Global Instance sa_subheap_subheap_proper :
-     Proper (subheap --> subheap ++> impl) (subheap (A := A)).
+     Proper (subheap --> subheap ++> Basics.impl) (subheap (A := A)).
   Proof.
 	intros x y [a Hyax] t u [b Hubt] [c Hxct].
 	destruct (sa_mulA Hyax Hxct) as [d [_ Hydt]].
@@ -162,7 +160,7 @@ Section Properties.
 
 End Properties.
 
+Implicit Arguments SepAlg [[equiv] [SAOps]].
 Implicit Arguments subheap [[A] [SAOps]].
-Implicit Arguments subheapT [[A] [e] [SAOps] [b]].
-Implicit Arguments compat_subheap [[A] [e] [sa] [r] [t] [SAOps]].
-
+Implicit Arguments subheapT [[A] [equiv] [SAOps] [b]].
+Implicit Arguments compat_subheap [[A] [equiv] [sa] [r] [t] [SAOps]].
